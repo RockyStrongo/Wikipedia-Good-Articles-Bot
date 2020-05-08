@@ -12,7 +12,7 @@ include ("twitter_credentials.php");
 //Keys and Access Tokens for Google API
 include ("google_credentials.php");
 
-//password 
+//password
 include ("password_check.php");
 
 //my personal email adress
@@ -427,8 +427,8 @@ foreach ($allrandomtitles as $k => $v)
 	else if ($alreadytwitted == 'chemical')
 	{
 		array_push($articleswithchemicalelementcategory, $thistitle);
-	} 
-	else 
+	}
+	else
 	{
 		array_push($articleswithnotyetpostedcategory, $thistitle);
 	}
@@ -449,11 +449,12 @@ else if (sizeof($articleswithalreadypostedcategory) != 0)
 	$randIndex = array_rand($articleswithalreadypostedcategory);
 	$titlerandom = $articleswithalreadypostedcategory[$randIndex];
 }
-else 
+else
 {
-	echo "<br>there are no articles available with categories other than chemical element, fuck";
-	$randIndex = array_rand($articleswithchemicalelementcategory);
-	$titlerandom = $articleswithchemicalelementcategory[$randIndex];		
+	echo "<br>there are no articles available with categories other than chemical element, don't tweet";
+	exit("Chemical Element - don't tweet ");
+	//$randIndex = array_rand($articleswithchemicalelementcategory);
+	//$titlerandom = $articleswithchemicalelementcategory[$randIndex];
 }
 
 // show the title value for the random index
@@ -487,9 +488,9 @@ foreach ($resultinfo["query"]["pages"] as $k => $v)
 	echo ("corresponding URL: " . $v["fullurl"]);
 }
 
-//if title is empty stop here and send an error email 
+//if title is empty stop here and send an error email
 if (strlen($titlerandom) == 0 )	{
-		
+
 	$to = $mypersonalemail;
 	$subject = "Wikigoodarticles error while posting tweet";
 	$txt = "Title empty, tweet not sent - exit program";
@@ -636,32 +637,32 @@ if (sizeof($images) == 0)
 
 }
 else
-{	
-	//get size of image array 
+{
+	//get size of image array
 	$sizeimagearray = sizeof($images);
 	if($sizeimagearray >= 4 ){
 		$numberofimages = 4;
 	} else {
 		$numberofimages = $sizeimagearray;
 	}
-	
+
 	//get random indexes in array
 	$randIndeximage = array_rand($images, $numberofimages);
-	
+
 	//get URLs of random images in an array
 	$imagesurlarray = array();
-	
+
 	foreach($randIndeximage as $k => $v){
 		echo "<br>random image : ". $images[$v]["title"];
 		$imagerandom1 = $images[$v]["title"];
-		$myrandomimageurl = getwikiimagedetails($imagerandom1, 'url');		
+		$myrandomimageurl = getwikiimagedetails($imagerandom1, 'url');
 		array_push($imagesurlarray, $myrandomimageurl);
 	}
-	
+
 	//print_r($imagesurlarray);
-	
-	//save images 
-	
+
+	//save images
+
 	$it = 1;
 	$imagestotweet = array();
 	foreach($imagesurlarray as $k => $v){
@@ -669,7 +670,7 @@ else
 		$thisurl = $v;
 		$path_parts = pathinfo($thisurl);
 		$extension = $path_parts['extension'];
-		
+
 		//save image
 		$imgtemp = 'images/hello' . $it . '.' . $extension;
 		echo "<br>".$imgtemp;
@@ -677,18 +678,18 @@ else
 		$it ++;
 		array_push($imagestotweet, $imgtemp);
 	}
-	
-	//upload images 
+
+	//upload images
 	$mediaarray = array();
 	foreach ($imagestotweet as $k => $v){
 		$media1 = $connection->upload('media/upload', ['media' => $v]);
 		$mediaID =  $media1->media_id_string;
 		array_push($mediaarray, $mediaID);
 	}
-	
+
 	$mediaids = implode(',', $mediaarray);
-	
-	//post tweet and images 
+
+	//post tweet and images
 	$parameters = ['status' => $mywikitweet, 'media_ids' => $mediaids ];
 	$result = $connection->post('statuses/update', $parameters);
 
