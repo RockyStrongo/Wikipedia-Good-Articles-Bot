@@ -250,15 +250,15 @@ function getarticlecategory($articletitlefunct)
 
 }
 
-// get 10 random indexes from good articles array
-// if less than 10 results available in page array, use the actual number of result
-if (sizeof($pages) <= 10)
+// get 50 random indexes from good articles array
+// if less than 50 results available in page array, use the actual number of result
+if (sizeof($pages) <= 50)
 {
 	$numberofpages = sizeof($pages);
 }
 else
 {
-	$numberofpages = 10;
+	$numberofpages = 50;
 }
 
 $randIndexes = array_rand($pages, $numberofpages);
