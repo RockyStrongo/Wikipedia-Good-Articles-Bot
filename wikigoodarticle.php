@@ -252,16 +252,23 @@ function getarticlecategory($articletitlefunct)
 
 // get 50 random indexes from good articles array
 // if less than 50 results available in page array, use the actual number of result
-if (sizeof($pages) <= 50)
+
+//remove already tweeted from array
+$pages_without_already_tweeted = $pages;
+unset($pages_without_already_tweeted['alreadytweeted']);
+
+if (sizeof($pages_without_already_tweeted) <= 50)
 {
-	$numberofpages = sizeof($pages);
+	$numberofpages = sizeof($pages_without_already_tweeted);
 }
 else
 {
 	$numberofpages = 50;
 }
 
-$randIndexes = array_rand($pages, $numberofpages);
+$randIndexes = array_rand($pages_without_already_tweeted, $numberofpages);
+
+
 
 //function to use wikidata to get information: is article a human? what gender? get description
 function wikidatainfo($myarticletitle)
@@ -361,6 +368,9 @@ foreach ($randIndexes as $k => $v)
 	}
 }
 
+/*echo "<br> all titles array:<br>";
+print_r($allrandomtitles);*/
+
 echo "<br>";
 echo "<br>Size of my random articles array : " . sizeof($allrandomtitles);
 echo "<br>Size of human male array : " . sizeof($humanmale);
@@ -372,7 +382,8 @@ echo "<br>";
 if (sizeof($humanmale) > sizeof($humanfemale) && sizeof($notgender) != 0)
 {
 
-	$numbertoremove = sizeof($humanmale) - sizeof($humanfemale);
+	$numbertoremove = (sizeof($humanmale) - sizeof($humanfemale))/2;
+	$numbertoremove = round($numbertoremove);
 	echo "<br>number of males to remove: " . $numbertoremove;
 	$randIndexesremove = array_rand($humanmale, $numbertoremove);
 
@@ -399,6 +410,7 @@ $articleswithnotyetpostedcategory = array();
 $articleswithchemicalelementcategory = array();
 
 echo "<br>";
+
 
 foreach ($allrandomtitles as $k => $v)
 {
