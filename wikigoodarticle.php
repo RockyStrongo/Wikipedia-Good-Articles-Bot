@@ -34,7 +34,7 @@ $result = json_decode($output, true);
 
 //parameter to get the next page of results
 //echo "<br>ei continue: ";
-//echo $result["continue"]["eicontinue"];
+$eicontinue = $result["continue"]["eicontinue"];
 //put pages result in array
 $pages = $result["query"]["embeddedin"];
 
@@ -137,6 +137,61 @@ function removealreadytweeted($tweetarray, $wikipagesarray)
 $pages = removealreadytweeted($mywikitweets, $pages);
 $alreadytweetedarticles = $pages['alreadytweeted'];
 
+//function to get article category from Google knowledge graph API
+function getarticlecategory($articletitlefunct)
+{
+
+	include ("google_credentials.php");
+
+	$params = array(
+		'query' => $articletitlefunct,
+		'limit' => 1,
+		'indent' => true,
+		'key' => $api_key
+	);
+	$url = $service_url . '?' . http_build_query($params);
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	$response = json_decode(curl_exec($ch) , true);
+	curl_close($ch);
+
+	foreach ($response['itemListElement'] as $element)
+	{
+		$thiscategory = $element['result']['description'];
+		$thisscore = $element['resultScore'];
+	}
+
+	if ($thiscategory == NULL or $thisscore < 100)
+	{
+		$articlecategoryfunct = "no category";
+	}
+	else
+	{
+		$articlecategoryfunct = $element['result']['description'];
+	}
+
+	return $articlecategoryfunct;
+
+}
+
+
+function removechemicalelements($wikipagesarray) {
+	foreach ($wikipagesarray as $key => $value)
+		{
+			$wikipagetitle = $value["title"];
+			$wikipagetitle = htmlspecialchars_decode($wikipagetitle);
+			$wikiarticlecateg = getarticlecategory($wikipagetitle);
+			if($wikiarticlecateg == "Chemical element") {
+				echo "<br>".$wikipagetitle."is a chemical element, remove from pages array";
+				unset($wikipagesarray[$key]);
+			}
+		}
+		return $wikipagesarray;
+	}
+
+$pages = removechemicalelements($pages);
+
 //function to get wikipedia next page results
 function getnextpage($eicontinueid)
 {
@@ -156,10 +211,17 @@ function getnextpage($eicontinueid)
 	return $result;
 }
 
+
+
 //check size of pages array - if empty, go to next page
-if (sizeof($pages) == 0)
+
+
+$pages_without_already_tweeted = $pages;
+unset($pages_without_already_tweeted['alreadytweeted']);
+
+if (sizeof($pages_without_already_tweeted) == 0)
 {
-	while (sizeof($pages) == 0)
+	while (sizeof($pages_without_already_tweeted) == 0)
 	{
 		echo "<br>array of pages empty go to next wiki results page";
 		$pages = getnextpage($eicontinue) ["query"]["embeddedin"];
@@ -167,8 +229,10 @@ if (sizeof($pages) == 0)
 		$eicontinue = $neweicontinue;
 		echo "<br>new eicontinue:" . $eicontinue;
 		$newpages = removealreadytweeted($mywikitweets, $pages);
+		$newpages = removechemicalelements($newpages);
 		echo "<br>size of new pages array:" . sizeof($newpages);
 		$pages = $newpages;
+		$pages_without_already_tweeted = $newpages;
 	}
 }
 
@@ -212,48 +276,11 @@ foreach ($alreadytweetedarticles as $k => $v)
 	}
 }
 
-//function to get article category from Google knowledge graph API
-function getarticlecategory($articletitlefunct)
-{
-
-	include ("google_credentials.php");
-
-	$params = array(
-		'query' => $articletitlefunct,
-		'limit' => 1,
-		'indent' => true,
-		'key' => $api_key
-	);
-	$url = $service_url . '?' . http_build_query($params);
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	$response = json_decode(curl_exec($ch) , true);
-	curl_close($ch);
-
-	foreach ($response['itemListElement'] as $element)
-	{
-		$thiscategory = $element['result']['description'];
-		$thisscore = $element['resultScore'];
-	}
-
-	if ($thiscategory == NULL or $thisscore < 100)
-	{
-		$articlecategoryfunct = "no category";
-	}
-	else
-	{
-		$articlecategoryfunct = $element['result']['description'];
-	}
-
-	return $articlecategoryfunct;
-
-}
 
 // get 50 random indexes from good articles array
 // if less than 50 results available in page array, use the actual number of result
 
-//remove already tweeted from array
+
 $pages_without_already_tweeted = $pages;
 unset($pages_without_already_tweeted['alreadytweeted']);
 
@@ -447,6 +474,7 @@ foreach ($allrandomtitles as $k => $v)
 }
 
 //if there are articles with category not yet tweeted, chose a random one, if not choose a random one from already tweeted category
+// a huge amount of articles are about chemical elements so we don't want to tweet anymore about chemical elements
 if (sizeof($articleswithnotyetpostedcategory) != 0)
 {
 	echo "<br>there are some articles available with not yet tweeted categories";
@@ -711,9 +739,14 @@ else
 	}
 	else
 	{
-		echo "error posting tweet";
+		echo "<br>tweet variable : ".$mywikitweet;
+		echo "<br>media variable : ".$mediaids;
+		echo "<br>error posting tweet";
 		$errortwitter = $connection->getLastHttpCode();
+		$othererror = $connection->getLastXHeaders();
 		echo $errortwitter;
+		echo "<br> other error : <br>";
+		print_r($othererror);
 		sendwikierroremail($errortwitter);
 	}
 }
