@@ -370,11 +370,10 @@ $humanfemale = array();
 
 echo "<br>";
 
-//check which areticles are about men, women or not applicable
-foreach ($randIndexes as $k => $v)
-{
-
-	$thistitle = $pages[$v]["title"];
+//check which articles are about men, women or not applicable
+// check if rand index is integer or array (if only one index it's an int)
+if (is_int($randIndexes) == true){
+	$thistitle = $pages_without_already_tweeted[$randIndexes]["title"];
 	array_push($allrandomtitles, $thistitle);
 	$wikidataarry = wikidatainfo($thistitle);
 
@@ -393,7 +392,33 @@ foreach ($randIndexes as $k => $v)
 		echo "<br>" . $thistitle . " is not applicable to gender";
 		array_push($notgender, $thistitle);
 	}
+} else if (is_array($randIndexes)== true){
+	foreach ($randIndexes as $k => $v)
+	{
+
+		$thistitle = $pages_without_already_tweeted[$v]["title"];
+		array_push($allrandomtitles, $thistitle);
+		$wikidataarry = wikidatainfo($thistitle);
+
+		if ($wikidataarry["gender"] == "Male")
+		{
+			echo "<br>" . $thistitle . " is a human male";
+			array_push($humanmale, $thistitle);
+		}
+		else if ($wikidataarry["gender"] == "Female")
+		{
+			echo "<br>" . $thistitle . " is a human female";
+			array_push($humanfemale, $thistitle);
+		}
+		else
+		{
+			echo "<br>" . $thistitle . " is not applicable to gender";
+			array_push($notgender, $thistitle);
+		}
+	}
 }
+
+
 
 /*echo "<br> all titles array:<br>";
 print_r($allrandomtitles);*/
