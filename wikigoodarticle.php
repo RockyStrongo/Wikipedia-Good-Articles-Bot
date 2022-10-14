@@ -847,8 +847,4 @@ echo "<br>Time elapsed to run the code: " . $time_elapsed_secs;
 
 ?>
 
-
-$time_elapsed_secs = microtime(true) - $start;
-echo "<br>Time elapsed to run the code: " . $time_elapsed_secs;
-
 ?>
