@@ -1,8 +1,6 @@
 <?php
 $start = microtime(true);
 ini_set('max_execution_time', 0);
-echo "ini file max exec time : ".ini_get('max_execution_time')."<br>";
-echo "ini file memory limit : ".ini_get('memory_limit')."<br>";
 
 //include the Oauth library - https://twitteroauth.com/
 require "twitteroauth/autoload.php";
